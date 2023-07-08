@@ -1,0 +1,24 @@
+version: "3.1"
+
+services:
+  frontend:
+    container_name: demo-budget-app-frontend
+    build:
+      context: ./frontend
+      dockerfile: docker/Dockerfile
+      target: development
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend/files/app:/app
+    command: bash -c "npm install && npm run dev"
+  backend:
+    container_name: demo-budget-app-backend
+    build:
+      context: ./backend
+      dockerfile: docker/Dockerfile
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend/files/app:/app
+    command: bash -c "flask run --host=0.0.0.0"

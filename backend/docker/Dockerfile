@@ -4,6 +4,6 @@ WORKDIR /app
 COPY files/app/requirements.txt ./
 
 RUN pip install -r requirements.txt
-ENV FLASK_APP=app
+ENV FLASK_APP=main
 
 EXPOSE 5000

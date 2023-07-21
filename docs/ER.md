@@ -14,13 +14,17 @@ erDiagram
     Transactions }o--|| Subcategories : "Belong to"
 
     Users {
-        cognito_id VARCHAR PK
+        id INT PK
+        cognito_id VARCHAR
+        username VARCHAR
     }
 
     Accounts {
-        user_id INT PK
+        id INT PK
+        user_id INT FK
         name VARCHAR
         currency VARCHAR
+        balance DECIMAL
     }
 
     Transactions {
@@ -40,22 +44,28 @@ erDiagram
     }
 
     Budgets {
+        id INT PK
         account_id INT FK
         amount DECIMAL
     }
 
     Categories {
+        id INT PK
+        user_id INT FK
         user INT FK
         name VARCHAR
     }
 
     Subcategories {
+        user_id INT FK
         category INT FK
         name VARCHAR
     }
 
 
     CategoryBudgets {
+        id INT PK
+        user_id INT FK
         category INT FK
         amount DECIMAL
     }

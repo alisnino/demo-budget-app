@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "name": "demo-budget-app",
+  "workspaces": [
+    "services/frontend"
+  ],
+  "scripts": {}
+}

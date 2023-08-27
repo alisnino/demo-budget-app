@@ -6,5 +6,8 @@
     "services/backend",
     "packages/prisma"
   ],
-  "scripts": {}
+  "scripts": {},
+  "dependencies": {
+    "yarn": "^1.22.19"
+  }
 }

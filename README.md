@@ -3,9 +3,9 @@
 ## Migration file creation
 
 ```
-docker compose run backend alembic revision --autogenerate -m "Comment here"
+docker compose run prisma yarn workspace @packages/prisma prisma migrate dev --name <migration-name>
 ```
 
 ## Execute migration
 
-docker compose run backend alembic upgrade head
+docker compose run prisma yarn workspace @packages/prisma prisma migrate dev --skip-seed

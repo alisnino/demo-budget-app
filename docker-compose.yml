@@ -21,3 +21,29 @@ services:
       - .:/app
       - ./services/backend/node_modules:/app/services/backend/node_modules
     command: bash -c "yarn workspace @services/backend start"
+  prisma:
+    build:
+      context: ./
+      dockerfile: ./docker/packages/prisma.Dockerfile
+    ports:
+      - "5555:5555"
+    environment:
+      DATABASE_URL: mysql://root:root_password@db:3306/demo_budget_app
+    volumes:
+      - .:/app
+      - ./packages/prisma/node_modules:/app/packages/prisma/node_modules
+    command: bash -c "yarn workspace @packages/prisma prisma studio"
+  db:
+    platform: linux/x86_64
+    image: mysql:5.7
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: demo_budget_app
+      MYSQL_USER: dev_user
+      MYSQL_PASSWORD: password
+    volumes:
+      - db:/var/lib/mysql
+volumes:
+  db:

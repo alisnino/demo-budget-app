@@ -1,0 +1,10 @@
+{
+  "private": true,
+  "name": "demo-budget-app",
+  "workspaces": [
+    "services/frontend",
+    "services/backend",
+    "packages/prisma"
+  ],
+  "scripts": {}
+}

@@ -1,6 +1,8 @@
-FROM node:18.16.1
+FROM node:18.16.1 as development
 
 WORKDIR /app/
+
+FROM development as production
 
 COPY package.json yarn.lock ./
 COPY services/backend/package.json services/backend/yarn.lock ./services/backend/

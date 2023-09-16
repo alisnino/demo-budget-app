@@ -5,8 +5,11 @@ services:
     build:
       context: ./
       dockerfile: ./docker/services/frontend.Dockerfile
+      target: development
     ports:
       - "3000:3000"
+    environment:
+      DATABASE_URL: mysql://root:root_password@db:3306/demo_budget_app
     volumes:
       - .:/app
       - ./services/frontend/node_modules:/app/services/frontend/node_modules
@@ -15,24 +18,15 @@ services:
     build:
       context: ./
       dockerfile: ./docker/services/backend.Dockerfile
+      target: development
     ports:
       - "5000:3000"
-    volumes:
-      - .:/app
-      - ./services/backend/node_modules:/app/services/backend/node_modules
-    command: bash -c "yarn workspace @services/backend start"
-  prisma:
-    build:
-      context: ./
-      dockerfile: ./docker/packages/prisma.Dockerfile
-    ports:
-      - "5555:5555"
     environment:
       DATABASE_URL: mysql://root:root_password@db:3306/demo_budget_app
     volumes:
       - .:/app
-      - ./packages/prisma/node_modules:/app/packages/prisma/node_modules
-    command: bash -c "yarn workspace @packages/prisma prisma studio"
+      - ./services/backend/node_modules:/app/services/backend/node_modules
+    command: bash -c "yarn workspace @services/backend start"
   db:
     platform: linux/x86_64
     image: mysql:5.7

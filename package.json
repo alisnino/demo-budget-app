@@ -8,6 +8,8 @@
   ],
   "scripts": {},
   "dependencies": {
-    "yarn": "^1.22.19"
+    "yarn": "^1.22.19",
+    "@trpc/client": "^10.38.5",
+    "@trpc/server": "^10.38.5"
   }
 }

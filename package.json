@@ -2,9 +2,8 @@
   "private": true,
   "name": "demo-budget-app",
   "workspaces": [
-    "services/frontend",
-    "services/backend",
-    "packages/prisma"
+    "services/*",
+    "packages/*"
   ],
   "dependencies": {
     "yarn": "^1.22.19"

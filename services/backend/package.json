@@ -1,0 +1,9 @@
+{
+  "name": "@services/backend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "go mod tidy && go run . ",
+    "build": "go build ."
+  }
+}

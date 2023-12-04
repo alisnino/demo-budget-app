@@ -4,14 +4,16 @@ export type ButtonVariants = "default" | "negative";
 
 export type ButtonProps = {
   text: string;
-  onClick: () => void;
+  onClick?: () => void;
   variant?: ButtonVariants;
+  isSubmitButton?: boolean;
 };
 
 export const DefaultButton: React.FC<ButtonProps> = ({
   text,
   onClick,
   variant,
+  isSubmitButton,
 }) => {
   const DefaultButtonStyles = {
     backgroundColor: variant === "negative" ? "white" : "customTeal.900",
@@ -36,7 +38,11 @@ export const DefaultButton: React.FC<ButtonProps> = ({
   };
 
   return (
-    <Button onClick={onClick} sx={DefaultButtonStyles}>
+    <Button
+      onClick={isSubmitButton === true ? undefined : onClick}
+      sx={DefaultButtonStyles}
+      type={isSubmitButton === true ? "submit" : "button"}
+    >
       {text}
     </Button>
   );

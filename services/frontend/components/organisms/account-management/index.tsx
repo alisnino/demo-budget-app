@@ -1,15 +1,11 @@
+import { Modal, ModalContent, ModalOverlay } from "@chakra-ui/react";
 import {
-  Box,
-  Flex,
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  ModalOverlay,
-} from "@chakra-ui/react";
-import { AccountManagementForm } from "./account-management-form";
-import { DefaultButton } from "@/components/atoms/default-button";
+  AccountManagementForm,
+  AccountManagementFormValidator,
+  AccountManagementFormValues,
+} from "./account-management-form";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 export type AccountManagementModalType = "create" | "edit";
 
@@ -24,28 +20,38 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
   isOpen,
   onClose,
 }) => {
+  const {
+    register,
+    getValues,
+    formState: { errors },
+    reset,
+    handleSubmit,
+  } = useForm<AccountManagementFormValues>({
+    resolver: zodResolver(AccountManagementFormValidator),
+  });
+
+  const handleSave = () => {
+    const data = getValues();
+    alert(`data: ${JSON.stringify(data)}`);
+    reset();
+    onClose();
+  };
+
+  const handleCancel = () => {
+    reset();
+    onClose();
+  };
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal isOpen={isOpen} onClose={onClose} isCentered>
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>
-          {operation === "create" ? "Add account" : "Edit account"}
-        </ModalHeader>
-        <ModalBody>
-          <AccountManagementForm operation={operation} />
-        </ModalBody>
-        <ModalFooter>
-          <Flex flexDir={{ md: "row" }}>
-            <Box mr="4px">
-              <DefaultButton
-                variant="negative"
-                text="Cancel"
-                onClick={onClose}
-              />
-            </Box>
-            <DefaultButton text="Save" onClick={onClose} />
-          </Flex>
-        </ModalFooter>
+        <AccountManagementForm
+          operation={operation}
+          formHooks={{ register, errors, handleSubmit }}
+          onCancel={handleCancel}
+          onSave={handleSave}
+        />
       </ModalContent>
     </Modal>
   );

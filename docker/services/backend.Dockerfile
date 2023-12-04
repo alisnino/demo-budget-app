@@ -1,18 +1,20 @@
-FROM node:18.16.1 as development
+ARG NODE_VERSION
+FROM node:${NODE_VERSION} as development
 
-WORKDIR /app/
+RUN npm install turbo --global
+
+COPY --from=golang:1.21.4-alpine /usr/local/go/ /usr/local/go/
+ENV PATH="/usr/local/go/bin:${PATH}"
+
+WORKDIR /app
 
 FROM development as production
 
-COPY package.json yarn.lock ./
-COPY services/backend/package.json services/backend/yarn.lock ./services/backend/
+COPY go.mod go.sum ./
+RUN go mod download
 
-RUN yarn install
+COPY . .
 
-COPY services/backend/ .services/backend/
+RUN go build -o /backend
 
-# RUN yarn build
-
-EXPOSE 5000
-
-CMD ["yarn", "workspace", "@services/backend", "start"]
+EXPOSE 8080

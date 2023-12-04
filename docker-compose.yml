@@ -8,8 +8,6 @@ services:
       target: development
     ports:
       - "3000:3000"
-    environment:
-      DATABASE_URL: mysql://root:root_password@db:3306/demo_budget_app
     volumes:
       - .:/app
       - ./services/frontend/node_modules:/app/services/frontend/node_modules
@@ -20,13 +18,13 @@ services:
       dockerfile: ./docker/services/backend.Dockerfile
       target: development
     ports:
-      - "5000:3000"
+      - "8080:8080"
     environment:
-      DATABASE_URL: mysql://root:root_password@db:3306/demo_budget_app
+      DATABASE_URL: root:root_password@tcp(db:3306)/demo_budget_app
+      PORT: 8080
     volumes:
       - .:/app
-      - ./services/backend/node_modules:/app/services/backend/node_modules
-    command: bash -c "yarn workspace @services/backend start"
+    command: bash -c "yarn workspace @services/backend dev"
   db:
     platform: linux/x86_64
     image: mysql:5.7

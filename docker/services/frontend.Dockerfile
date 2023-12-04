@@ -1,5 +1,7 @@
-FROM node:18.16.1 as development
+ARG NODE_VERSION
+FROM node:${NODE_VERSION} as development
 
+RUN npm install turbo --global
 WORKDIR /app/
 
 FROM development as production

@@ -1,4 +1,5 @@
 import { extendTheme } from "@chakra-ui/react";
+import { modalTheme } from "./modal";
 
 export const customTheme = extendTheme({
   colors: {
@@ -44,5 +45,8 @@ export const customTheme = extendTheme({
     customGray: {
       900: "#878787",
     },
+  },
+  components: {
+    Modal: modalTheme,
   },
 });

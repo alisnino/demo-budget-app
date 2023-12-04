@@ -1,4 +1,6 @@
 import {
+  Box,
+  Flex,
   Modal,
   ModalBody,
   ModalContent,
@@ -6,6 +8,8 @@ import {
   ModalHeader,
   ModalOverlay,
 } from "@chakra-ui/react";
+import { AccountManagementForm } from "./account-management-form";
+import { DefaultButton } from "@/components/atoms/default-button";
 
 export type AccountManagementModalType = "create" | "edit";
 
@@ -24,9 +28,24 @@ export const AccountManagementModal: React.FC<AccountManagementModalProps> = ({
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>Header here</ModalHeader>
-        <ModalBody>Body here. Operation: {operation}</ModalBody>
-        <ModalFooter>Footer here</ModalFooter>
+        <ModalHeader>
+          {operation === "create" ? "Add account" : "Edit account"}
+        </ModalHeader>
+        <ModalBody>
+          <AccountManagementForm operation={operation} />
+        </ModalBody>
+        <ModalFooter>
+          <Flex flexDir={{ md: "row" }}>
+            <Box mr="4px">
+              <DefaultButton
+                variant="negative"
+                text="Cancel"
+                onClick={onClose}
+              />
+            </Box>
+            <DefaultButton text="Save" onClick={onClose} />
+          </Flex>
+        </ModalFooter>
       </ModalContent>
     </Modal>
   );

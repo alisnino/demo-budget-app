@@ -1,14 +1,21 @@
 import { Button } from "@chakra-ui/react";
 
+export type ButtonVariants = "default" | "negative";
+
 export type ButtonProps = {
   text: string;
   onClick: () => void;
+  variant?: ButtonVariants;
 };
 
-export const DefaultButton: React.FC<ButtonProps> = ({ text, onClick }) => {
+export const DefaultButton: React.FC<ButtonProps> = ({
+  text,
+  onClick,
+  variant,
+}) => {
   const DefaultButtonStyles = {
-    backgroundColor: "customTeal.900",
-    color: "white",
+    backgroundColor: variant === "negative" ? "white" : "customTeal.900",
+    color: variant === "negative" ? "customTeal.900" : "white",
     _hover: {
       backgroundColor: "customTeal.800",
       color: "white",

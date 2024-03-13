@@ -1,0 +1,53 @@
+version: "3"
+services:
+  frontend:
+    build:
+      context: ./frontend/app
+      dockerfile: ../docker/Dockerfile
+      target: dev
+    ports:
+      - 3080:3000
+    volumes:
+      - ./frontend/app:/app
+    depends_on:
+      db:
+        condition: service_healthy
+    command: npm run dev
+  backend:
+    build:
+      context: ./backend/app
+      dockerfile: ../docker/Dockerfile
+      target: dev
+    ports:
+      - 5080:5000
+    volumes:
+      - ./backend/app:/app
+    depends_on:
+      db:
+        condition: service_healthy
+    command: flask run --debug --host=0.0.0.0
+  db:
+    image: mysql:latest
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=budgetapp
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=1234
+    volumes:
+      - ./db:/var/lib/mysql
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "127.0.0.1",
+          "-u",
+          "root",
+          "-p'root'",
+        ]
+      interval: 5s
+      timeout: 10s
+      retries: 3
+      start_period: 10s

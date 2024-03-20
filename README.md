@@ -14,3 +14,26 @@ The main application code is here, including Dockerfiles and app-specific env fi
 #### infra/
 
 The infrastructure needed to deploy the app, in code. Coded with AWS CDK. Keep in mind once the infrastructure layout has been defined and deployed once, you won't really deploy it again unless anything changes so this is **NOT** a folder to use in the CI/CD in case you want to fork this repository.
+
+### Quick Commands
+
+#### Run the app
+
+```
+cd main
+docker compose up
+```
+
+#### Create a migration file after changing the models
+
+```
+cd main
+docker compose run backend flask db migrate -m "migration message"
+```
+
+#### Apply your new migrations
+
+```
+cd main
+docker compose run backend flask db upgrade
+```

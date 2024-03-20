@@ -2,7 +2,7 @@
 from flask import Flask
 from db import db
 from flask_migrate import Migrate
-from models import user
+from models import user, transaction, transaction_category
 import os
 
 # use os.environ.get to obtain hostname, username, password, and database name

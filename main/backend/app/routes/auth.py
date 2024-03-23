@@ -1,4 +1,6 @@
 from flask import request
+
+from aws.cognito import create_user
 from . import auth_bp
 from logger import logger
 from schemas.auth import SignUpRequestSchema, VerifyAccountRequestSchema, LoginRequestSchema, LoginResponseSchema
@@ -14,6 +16,12 @@ def signup():
     email = inputs.email
 
     logger.info(f"Received signup request for username: {username}, email: {email}")
+    try:
+        create_user(email, username)
+    except Exception as e:
+        logger.error(f"Error creating user: {e}")
+        return {'message': 'Failed to create user'}, 500
+    
     return {'message': 'User signed up successfully'}, 200
 
 @auth_bp.route('/verify', methods=['POST'])

@@ -5,3 +5,4 @@ Flask-Migrate==4.0.7
 
 cryptography
 pydantic
+boto3

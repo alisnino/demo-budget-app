@@ -1,9 +1,13 @@
 from flask import request
+from logger import logger
+
+from db import db
+from models.user import User
+
+from . import auth_bp
+from schemas.auth import SignUpRequestSchema, VerifyAccountRequestSchema, LoginRequestSchema, LoginResponseSchema
 
 from aws.cognito import create_user, login_user, verify_user
-from . import auth_bp
-from logger import logger
-from schemas.auth import SignUpRequestSchema, VerifyAccountRequestSchema, LoginRequestSchema, LoginResponseSchema
 
 @auth_bp.route('/signup', methods=['POST'])
 def signup():
@@ -38,6 +42,9 @@ def verifyaccount():
     logger.info(f"Received verification account request for username: {username}")
     try:
         verify_user(username, verification_code)
+        db.session.add(User(username=username))
+        db.session.commit()
+
     except Exception as e:
         logger.error(f"Verification failed: {e}")
         return {'message': 'Verification code is incorrect.'}, 500

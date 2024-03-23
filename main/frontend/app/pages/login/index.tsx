@@ -1,12 +1,8 @@
 import { LoginRequest, LoginRequestSchema } from "@/schemas/auth"
-import { InputStyle } from "@/styles/input"
-import { FormLabelStyle } from "@/styles/text"
 import {
   Box,
   Button,
-  Flex,
   FormControl,
-  FormErrorMessage,
   Input,
   InputGroup,
   InputRightElement,
@@ -30,43 +26,61 @@ const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false)
 
   return (
-    <Box>
-      <Flex w="360px" p="16px 24px" gap="8px">
-        <form
-          onSubmit={handleSubmit((data) => console.log(data))}
-          style={{ width: "100%", height: "100%" }}
+    <VStack
+      w="100%"
+      h="100%"
+      justifyContent="center"
+      alignItems="center"
+      gap="0"
+    >
+      <form
+        onSubmit={handleSubmit((data) => console.log(data))}
+        style={{ width: "420px", height: "fit-content" }}
+      >
+        <VStack
+          gap="12px"
+          backgroundColor="primary.500"
+          borderRadius="16px"
+          p="24px 48px"
         >
-          <VStack gap="8px">
-            <FormControl isInvalid={!!errors.username}>
-              <Text sx={FormLabelStyle}>Username or email</Text>
-              <Input sx={InputStyle} {...register("username")} />
-              {errors.username && (
-                <FormErrorMessage>{errors.username.message}</FormErrorMessage>
-              )}
-            </FormControl>
-            <FormControl isInvalid={!!errors.password}>
-              <Text sx={FormLabelStyle}>Password</Text>
-              <InputGroup>
-                <Input
-                  sx={InputStyle}
-                  {...register("password")}
-                  type={showPassword ? "text" : "password"}
-                />
-                <Box onClick={() => setShowPassword(!showPassword)}>
-                  <InputRightElement>
-                    {showPassword ? <FaEye /> : <FaEyeSlash />}
-                  </InputRightElement>
-                </Box>
-              </InputGroup>
-              {errors.password && (
-                <FormErrorMessage>{errors.password.message}</FormErrorMessage>
-              )}
-            </FormControl>
-            <Button type="submit">Login</Button>
+          <FormControl isInvalid={!!errors.username}>
+            <Text color="white">Username or email</Text>
+            <Input {...register("username")} />
+          </FormControl>
+          <FormControl isInvalid={!!errors.password}>
+            <Text color="white">Password</Text>
+            <InputGroup>
+              <Input
+                {...register("password")}
+                type={showPassword ? "text" : "password"}
+              />
+              <Box onClick={() => setShowPassword(!showPassword)}>
+                <InputRightElement>
+                  {showPassword ? <FaEye /> : <FaEyeSlash />}
+                </InputRightElement>
+              </Box>
+            </InputGroup>
+          </FormControl>
+          <Button type="submit">
+            <Text>Login</Text>
+          </Button>
+        </VStack>
+        {(errors.username || errors.password) && (
+          <VStack gap="4px" justifyContent="center" alignItems="center" p="8px">
+            {errors.username && (
+              <Text fontSize={"sm"} color="red" textAlign="center">
+                {errors.username.message}
+              </Text>
+            )}
+            {errors.password && (
+              <Text fontSize={"sm"} color="red" textAlign="center">
+                {errors.password.message}
+              </Text>
+            )}
           </VStack>
-        </form>
-      </Flex>
-    </Box>
+        )}
+      </form>
+    </VStack>
   )
 }
 

@@ -1,13 +1,13 @@
-from flask import request
+from flask import request, session, make_response
 from logger import logger
 
 from db import db
 from models.user import User
 
 from . import auth_bp
-from schemas.auth import SignUpRequestSchema, VerifyAccountRequestSchema, LoginRequestSchema, LoginResponseSchema
+from schemas.auth import SignUpRequestSchema, VerifyAccountRequestSchema, LoginRequestSchema
 
-from aws.cognito import create_user, login_user, verify_user
+from aws.cognito import create_user, login_user, verify_user, verify_jwt_token
 
 @auth_bp.route('/signup', methods=['POST'])
 def signup():
@@ -20,7 +20,6 @@ def signup():
     email = inputs.email
     password = inputs.password
 
-    logger.info(f"Received signup request for username: {username}, email: {email}")
     try:
         create_user(email, username, password)
     except Exception as e:
@@ -39,7 +38,6 @@ def verifyaccount():
     username = inputs.username
     verification_code = inputs.verification_code
 
-    logger.info(f"Received verification account request for username: {username}")
     try:
         verify_user(username, verification_code)
         db.session.add(User(username=username))
@@ -61,10 +59,18 @@ def login():
     username = inputs.username
     password = inputs.password
 
-    logger.info(f"Received login request for user: {username}")
     try:
         cognito_response = login_user(username, password)
+        access_token = cognito_response['AuthenticationResult']['AccessToken']
+        decoded_token = verify_jwt_token(access_token)
+        user = User.query.filter_by(username=decoded_token['username']).first()
+        if not user:
+            return {'message': 'User does not exist'}, 500
+        session['user_id'] = user.id
+        session["username"] = user.username
     except Exception as e:
-        logger.error(f"Login failed: {e}")
+        logger.error(f"Login failed for user {username}: {e}")
         return {'message': 'Username or password is incorrect.'}, 500
-    return LoginResponseSchema(access_token=cognito_response['AuthenticationResult']['AccessToken']).model_dump(), 200
+    response = make_response({'message': 'User logged in successfully'}, 200)
+    response.set_cookie('session_id', session.sid)
+    return response

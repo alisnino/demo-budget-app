@@ -17,5 +17,4 @@ class LoginRequestSchema(BaseModel):
     username: str
     password: str
 
-class LoginResponseSchema(BaseModel):
-    access_token: str
+# Only status code needed for LoginResponse

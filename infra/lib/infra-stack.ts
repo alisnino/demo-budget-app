@@ -49,6 +49,19 @@ export class InfraStack extends cdk.Stack {
       assumedBy: new ServicePrincipal("cognito-idp.amazonaws.com"),
     });
 
-    devCognito.grant(cognitoRole, "cognito-idp:AdminCreateUser"); // In case we ever need admin users
+    devCognito.grant(cognitoRole, "cognito-idp:AdminCreateUser");
+
+    const appClient = new aws_cognito.UserPoolClient(
+      this,
+      "budgetapp-dev-userpool-client",
+      {
+        userPool: devCognito,
+        userPoolClientName: "budgetapp-dev-client",
+        authFlows: {
+          userPassword: true,
+        },
+        generateSecret: false,
+      }
+    );
   }
 }

@@ -47,6 +47,7 @@ To test the backend on your AWS configuration, you might want to set up the foll
 ```
 AWS_DEFAULT_REGION=
 COGNITO_USER_POOL_ID=
+COGNITO_CLIENT_ID=
 AWS_ACCESS_KEY_ID=
 AWS_SECRET_ACCESS_KEY=
 ```

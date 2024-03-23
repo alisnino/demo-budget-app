@@ -1,6 +1,6 @@
 from flask import request
 
-from aws.cognito import create_user
+from aws.cognito import create_user, login_user, verify_user
 from . import auth_bp
 from logger import logger
 from schemas.auth import SignUpRequestSchema, VerifyAccountRequestSchema, LoginRequestSchema, LoginResponseSchema
@@ -14,10 +14,11 @@ def signup():
     
     username = inputs.username
     email = inputs.email
+    password = inputs.password
 
     logger.info(f"Received signup request for username: {username}, email: {email}")
     try:
-        create_user(email, username)
+        create_user(email, username, password)
     except Exception as e:
         logger.error(f"Error creating user: {e}")
         return {'message': 'Failed to create user'}, 500
@@ -32,10 +33,14 @@ def verifyaccount():
         return {'message': 'Bad request'}, 400
     
     username = inputs.username
-    email = inputs.email
     verification_code = inputs.verification_code
 
-    logger.info(f"Received verification account request for username: {username}, email: {email}, verification code: {verification_code}")
+    logger.info(f"Received verification account request for username: {username}")
+    try:
+        verify_user(username, verification_code)
+    except Exception as e:
+        logger.error(f"Verification failed: {e}")
+        return {'message': 'Verification code is incorrect.'}, 500
     return {'message': 'User account verified successfully'}, 200
 
 
@@ -46,8 +51,13 @@ def login():
     except ValueError as e:
         return {'message': 'Bad request'}, 400
     
-    email = inputs.email
+    username = inputs.username
     password = inputs.password
 
-    logger.info(f"Received login request for email: {email}")
-    return LoginResponseSchema(access_token="hi").model_dump(), 200
+    logger.info(f"Received login request for user: {username}")
+    try:
+        cognito_response = login_user(username, password)
+    except Exception as e:
+        logger.error(f"Login failed: {e}")
+        return {'message': 'Username or password is incorrect.'}, 500
+    return LoginResponseSchema(access_token=cognito_response['AuthenticationResult']['AccessToken']).model_dump(), 200

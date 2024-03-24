@@ -3,7 +3,7 @@ import { aws_cognito } from "aws-cdk-lib";
 import { Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import { Construct } from "constructs";
 
-export class InfraStack extends cdk.Stack {
+export class BudgetAppDevStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 

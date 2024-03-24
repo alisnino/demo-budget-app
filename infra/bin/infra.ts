@@ -2,6 +2,7 @@
 import "source-map-support/register";
 import * as cdk from "aws-cdk-lib";
 import { BudgetAppDevStack } from "../lib/budget-app-dev-stack";
+import { BudgetAppProdStack } from "../lib/budget-app-prod-stack";
 
 const app = new cdk.App();
 new BudgetAppDevStack(app, "BudgetAppDevStack", {
@@ -16,3 +17,5 @@ new BudgetAppDevStack(app, "BudgetAppDevStack", {
   // env: { account: '123456789012', region: 'us-east-1' },
   /* For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html */
 });
+
+new BudgetAppProdStack(app, "BudgetAppProdStack", {});

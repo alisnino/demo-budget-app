@@ -27,6 +27,7 @@ services:
       - DB_USERNAME=user
       - DB_PASSWORD=1234
       - DB_NAME=budgetapp
+      - FLASK_ENV=development
     env_file:
       - ./backend/docker/local.env
     depends_on:

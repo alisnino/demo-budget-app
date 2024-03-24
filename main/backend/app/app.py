@@ -2,6 +2,7 @@
 from flask import Flask, request, session
 from flask_migrate import Migrate
 from flask_session import Session
+from flask_cors import CORS
 from routes import auth, transactions
 from db import db
 from models import user, transaction, transaction_category
@@ -22,6 +23,9 @@ def create_app(test_config=None):
     app.config['SESSION_SQLALCHEMY_TABLE'] = 'sessions'
     app.config['SESSION_COOKIE_NAME'] = 'session_id'
     app.config['PERMANENT_SESSION_LIFETIME'] = 3 * 24 * 60 * 60
+    if os.environ.get("FLASK_ENV") == 'development':
+        app.config['SESSION_COOKIE_DOMAIN'] = ""
+        CORS(app, supports_credentials=True)
 
     db.init_app(app)
     Migrate(app, db)

@@ -9,6 +9,14 @@ from schemas.auth import SignUpRequestSchema, VerifyAccountRequestSchema, LoginR
 
 from aws.cognito import create_user, login_user, verify_user, verify_jwt_token
 
+@auth_bp.route('/', methods=['GET'])
+def session_check():
+    if not session:
+        return {'message': 'Unauthorized'}, 401
+    if not session.get('user_id'):
+        return {'message': 'Unauthorized'}, 401
+    return {'message': 'User is logged in'}, 200
+
 @auth_bp.route('/signup', methods=['POST'])
 def signup():
     try:
@@ -72,5 +80,5 @@ def login():
         logger.error(f"Login failed for user {username}: {e}")
         return {'message': 'Username or password is incorrect.'}, 500
     response = make_response({'message': 'User logged in successfully'}, 200)
-    response.set_cookie('session_id', session.sid)
+    response.set_cookie('session_id', session.sid, httponly=True)
     return response

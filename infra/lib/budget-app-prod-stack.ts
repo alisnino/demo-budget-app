@@ -52,6 +52,11 @@ export class BudgetAppProdStack extends cdk.Stack {
         allowAllOutbound: true,
       }
     );
+    bastionSecurityGroup.addIngressRule(
+      aws_ec2.Peer.ipv4("3.112.23.0/29"),
+      aws_ec2.Port.tcp(22),
+      "Allow SSH from EC2 instance connect in Tokyo"
+    );
 
     //Bastion instance
     const instance = new aws_ec2.Instance(this, "budgetapp-prod-bastion", {

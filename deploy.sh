@@ -18,3 +18,6 @@ docker build -t $BACKEND_TAG -f docker/Dockerfile --target prod ./app
 
 docker push $FRONTEND_TAG
 docker push $BACKEND_TAG
+ 
+aws ecs update-service --force-new-deployment --cluster --service 
+aws ecs update-service --force-new-deployment --cluster --service --enable-execute-command

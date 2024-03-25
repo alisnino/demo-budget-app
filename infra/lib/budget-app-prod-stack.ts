@@ -7,12 +7,12 @@ import {
   aws_ecs,
   aws_ecs_patterns,
   aws_elasticloadbalancingv2,
+  aws_iam,
   aws_secretsmanager,
   aws_rds,
   aws_route53,
   aws_route53_targets,
 } from "aws-cdk-lib";
-import { Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import { Construct } from "constructs";
 
 interface BudgetAppProdStackProps extends cdk.StackProps {
@@ -117,7 +117,7 @@ export class BudgetAppProdStack extends cdk.Stack {
       }
     );
     backendLoadBalancerSecurityGroup.addIngressRule(
-      frontendLoadBalancerSecurityGroup,
+      frontendECSTaskSecurityGroup,
       aws_ec2.Port.tcp(443),
       "Allow traffic from frontend"
     );
@@ -232,6 +232,63 @@ export class BudgetAppProdStack extends cdk.Stack {
     });
 
     ////////////////////////////////////
+    // Cognito settings
+    ////////////////////////////////////
+
+    const cognito = new aws_cognito.UserPool(this, "budgetapp-prod-userpool", {
+      userPoolName: "budgetapp-prod-userpool",
+      signInCaseSensitive: false,
+      selfSignUpEnabled: true,
+      userVerification: {
+        emailSubject: "Verify your email for our demo budget app",
+        emailBody:
+          "Thanks for signing up to our demo budget app! Your verification code is {####}",
+        emailStyle: aws_cognito.VerificationEmailStyle.CODE,
+        smsMessage:
+          "Thanks for signing up to our demo budget app! Your verification code is {####}",
+      },
+      userInvitation: {
+        emailSubject: "Invitation to our demo budget app",
+        emailBody:
+          "Hi {username}, you have been invited to join our demo budget app! Your temporary password is {####}",
+      },
+      signInAliases: {
+        username: true,
+        email: true,
+      },
+      standardAttributes: {
+        email: {
+          required: true,
+          mutable: true,
+        },
+      },
+      autoVerify: { email: true },
+      keepOriginal: {
+        email: true,
+      },
+      accountRecovery: aws_cognito.AccountRecovery.EMAIL_ONLY,
+    });
+
+    const cognitoRole = new aws_iam.Role(this, "BudgetAppCognitoRole", {
+      assumedBy: new aws_iam.ServicePrincipal("cognito-idp.amazonaws.com"),
+    });
+
+    cognito.grant(cognitoRole, "cognito-idp:AdminCreateUser");
+
+    const appClient = new aws_cognito.UserPoolClient(
+      this,
+      "budgetapp-prod-userpool-client",
+      {
+        userPool: cognito,
+        userPoolClientName: "budgetapp-prod-client",
+        authFlows: {
+          userPassword: true,
+        },
+        generateSecret: false,
+      }
+    );
+
+    ////////////////////////////////////
     // ECR settings
     ////////////////////////////////////
 
@@ -287,9 +344,28 @@ export class BudgetAppProdStack extends cdk.Stack {
       }),
     });
 
+    const backendTaskRole = new aws_iam.Role(this, "BudgetAppBackendTaskRole", {
+      assumedBy: new aws_iam.ServicePrincipal("ecs-tasks.amazonaws.com"),
+    });
+    backendTaskRole.addToPolicy(
+      new aws_iam.PolicyStatement({
+        actions: [
+          "ssmmessages:CreateControlChannel",
+          "ssmmessages:CreateDataChannel",
+          "ssmmessages:OpenControlChannel",
+          "ssmmessages:OpenDataChannel",
+          "ecs:ExecuteCommand",
+        ],
+        resources: ["*"],
+      })
+    );
+
     const backendTaskDefinition = new aws_ecs.FargateTaskDefinition(
       this,
-      "budgetapp-prod-backend-task-definition"
+      "budgetapp-prod-backend-task-definition",
+      {
+        taskRole: backendTaskRole,
+      }
     );
 
     backendTaskDefinition.addContainer("budgetapp-prod-backend-container", {
@@ -300,6 +376,10 @@ export class BudgetAppProdStack extends cdk.Stack {
         DB_USERNAME: "user",
         DB_PASSWORD: secrets.secretValueFromJson("DB_PASSWORD").unsafeUnwrap(),
         DB_NAME: "budgetapp",
+        FRONTEND_URL: `https://budgetapp.${topLevelDomain}`,
+        COGNITO_USER_POOL_ID: cognito.userPoolId,
+        COGNITO_CLIENT_ID: appClient.userPoolClientId,
+        AWS_DEFAULT_REGION: props.env?.region || "ap-northeast-1",
       },
       portMappings: [{ containerPort: 5000 }],
       logging: new aws_ecs.AwsLogDriver({
@@ -349,19 +429,19 @@ export class BudgetAppProdStack extends cdk.Stack {
     //// Services and load balancers - backend
     ////////////////////////////////////
 
-    const backendNetworkLoadBalancer =
-      new aws_elasticloadbalancingv2.NetworkLoadBalancer(
+    const backendApplicationLoadBalancer =
+      new aws_elasticloadbalancingv2.ApplicationLoadBalancer(
         this,
-        "budgetapp-prod-backend-nlb",
+        "budgetapp-prod-backend-alb",
         {
           vpc,
-          internetFacing: false,
-          securityGroups: [backendLoadBalancerSecurityGroup],
+          internetFacing: true,
+          securityGroup: backendLoadBalancerSecurityGroup,
         }
       );
 
     const backendService =
-      new aws_ecs_patterns.NetworkLoadBalancedFargateService(
+      new aws_ecs_patterns.ApplicationLoadBalancedFargateService(
         this,
         "budgetapp-prod-backend-service",
         {
@@ -369,14 +449,18 @@ export class BudgetAppProdStack extends cdk.Stack {
           taskDefinition: backendTaskDefinition,
           desiredCount: 1,
           securityGroups: [backendECSTaskSecurityGroup],
-          loadBalancer: backendNetworkLoadBalancer,
+          loadBalancer: backendApplicationLoadBalancer,
+          certificate: certificate,
+          redirectHTTP: true,
         }
       );
 
-    backendNetworkLoadBalancer.addListener("budgetapp-prod-backend-listener", {
-      port: 443,
-      certificates: [certificate],
-      defaultTargetGroups: [backendService.targetGroup],
+    backendService.targetGroup.configureHealthCheck({
+      path: "/health/",
+      interval: cdk.Duration.seconds(30),
+      timeout: cdk.Duration.seconds(5),
+      healthyThresholdCount: 2,
+      unhealthyThresholdCount: 2,
     });
 
     ////////////////////////////////////
@@ -411,62 +495,5 @@ export class BudgetAppProdStack extends cdk.Stack {
       ),
       recordName: `www.api.budgetapp.${topLevelDomain}`,
     });
-
-    ////////////////////////////////////
-    // Cognito settings
-    ////////////////////////////////////
-
-    const cognito = new aws_cognito.UserPool(this, "budgetapp-prod-userpool", {
-      userPoolName: "budgetapp-prod-userpool",
-      signInCaseSensitive: false,
-      selfSignUpEnabled: true,
-      userVerification: {
-        emailSubject: "Verify your email for our demo budget app",
-        emailBody:
-          "Thanks for signing up to our demo budget app! Your verification code is {####}",
-        emailStyle: aws_cognito.VerificationEmailStyle.CODE,
-        smsMessage:
-          "Thanks for signing up to our demo budget app! Your verification code is {####}",
-      },
-      userInvitation: {
-        emailSubject: "Invitation to our demo budget app",
-        emailBody:
-          "Hi {username}, you have been invited to join our demo budget app! Your temporary password is {####}",
-      },
-      signInAliases: {
-        username: true,
-        email: true,
-      },
-      standardAttributes: {
-        email: {
-          required: true,
-          mutable: true,
-        },
-      },
-      autoVerify: { email: true },
-      keepOriginal: {
-        email: true,
-      },
-      accountRecovery: aws_cognito.AccountRecovery.EMAIL_ONLY,
-    });
-
-    const cognitoRole = new Role(this, "BudgetAppCognitoRole", {
-      assumedBy: new ServicePrincipal("cognito-idp.amazonaws.com"),
-    });
-
-    cognito.grant(cognitoRole, "cognito-idp:AdminCreateUser");
-
-    const appClient = new aws_cognito.UserPoolClient(
-      this,
-      "budgetapp-prod-userpool-client",
-      {
-        userPool: cognito,
-        userPoolClientName: "budgetapp-prod-client",
-        authFlows: {
-          userPassword: true,
-        },
-        generateSecret: false,
-      }
-    );
   }
 }

@@ -3,17 +3,17 @@ from flask import Flask, request, session
 from flask_migrate import Migrate
 from flask_session import Session
 from flask_cors import CORS
-from routes import auth, transactions
+from routes import auth, transactions, health
 from db import db
 from models import user, transaction, transaction_category
 
 import os
 
-# use os.environ.get to obtain hostname, username, password, and database name
-hostname = os.environ.get("DB_HOSTNAME")
-username = os.environ.get("DB_USERNAME")
-password = os.environ.get("DB_PASSWORD")
-database = os.environ.get("DB_NAME")
+# use os.getenv to obtain hostname, username, password, and database name
+hostname = os.getenv("DB_HOSTNAME")
+username = os.getenv("DB_USERNAME")
+password = os.getenv("DB_PASSWORD")
+database = os.getenv("DB_NAME")
 
 def create_app(test_config=None):
     app = Flask(__name__)
@@ -23,9 +23,11 @@ def create_app(test_config=None):
     app.config['SESSION_SQLALCHEMY_TABLE'] = 'sessions'
     app.config['SESSION_COOKIE_NAME'] = 'session_id'
     app.config['PERMANENT_SESSION_LIFETIME'] = 3 * 24 * 60 * 60
-    if os.environ.get("FLASK_ENV") == 'development':
+    if os.getenv("FLASK_ENV") == 'development':
         app.config['SESSION_COOKIE_DOMAIN'] = ""
         CORS(app, supports_credentials=True)
+    else:
+        CORS(app, supports_credentials=True, origins=os.getenv("FRONTEND_URL"))
 
     db.init_app(app)
     Migrate(app, db)
@@ -35,10 +37,11 @@ def create_app(test_config=None):
 
     app.register_blueprint(auth.auth_bp)
     app.register_blueprint(transactions.transactions_bp)
+    app.register_blueprint(health.health_bp)
 
     @app.before_request
     def before_request():
-        excluded_routes = ['/auth']
+        excluded_routes = ['/auth', '/health']
         for prefix in excluded_routes:
             if request.path.startswith(prefix):
                 return
